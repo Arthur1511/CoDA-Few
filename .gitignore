@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# project
+*.ipynb
+images/
+output.txt
+outputs/
+teste*/
+config/*
+*.sh
+*.ipynb
+*.npz
+images_plots
+iso_plots
+jaccard_files
+samples
