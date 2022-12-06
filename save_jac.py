@@ -2,22 +2,26 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from utils import get_all_data_loaders, get_val_data_loaders, prepare_sub_folder, get_config, write_2images, write_images, write_loss, Timer
 import argparse
+
 import numpy as np
-from torch.autograd import Variable
-from trainer import MUNIT_Trainer, UNIT_Trainer, FUNIT_Trainer
-import torch.backends.cudnn as cudnn
 import torch
+import torch.backends.cudnn as cudnn
+from torch.autograd import Variable
+
+from trainer import FUNIT_Trainer
+from utils import (Timer, get_all_data_loaders, get_config,
+                   get_val_data_loaders, prepare_sub_folder, write_2images,
+                   write_images, write_loss)
+
 try:
     from itertools import izip as zip
 except ImportError:  # will be 3.x series
     pass
 import os
-import sys
 import shutil
+import sys
 from glob import glob
-
 
 cudnn.benchmark = True
 path = "config/breast/*.yaml"
