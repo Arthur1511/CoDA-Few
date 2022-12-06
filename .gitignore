@@ -22,7 +22,7 @@ images/
 output.txt
 outputs/
 teste*/
-config/*
+# config/*
 *.sh
 *.ipynb
 *.npz

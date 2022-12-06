@@ -11,10 +11,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import jaccard_score
 
-from networks import (AdaINGen, FewShotGen, GPPatchMcResDis, MsImageDis, UNet,
-                      VAEGen)
-from utils import (dice_loss, get_model_list, get_scheduler, process_label,
-                   vgg_preprocess, weights_init)
+from networks import (FewShotGen, GPPatchMcResDis, UNet)
+from utils import (dice_loss, get_model_list, get_scheduler, process_label, weights_init)
 
 
 class FUNIT_Trainer(nn.Module):
@@ -217,67 +215,6 @@ class FUNIT_Trainer(nn.Module):
             hyperparameters['sup_w'] * self.loss_sup_b_recon, \
             self.loss_sup_total
     
-    def sup_update2(self, xa, xb, la, lb, ind_a, ind_b, hyperparameters):
-
-            self.gen_opt.zero_grad()
-
-            hot_xa = torch.cat([xa, self.one_hot_img[ind_a[0]]], 1)
-            hot_xb = torch.cat([xb, self.one_hot_img[ind_b[0]]], 1)
-
-            # encode a->b
-            c_xa = self.gen_test.enc_content(hot_xa)
-            s_xa = self.gen_test.enc_class_model(hot_xa)
-            s_xb = self.gen_test.enc_class_model(hot_xb)
-
-            # encode b->a
-            c_xb = self.gen_test.enc_content(hot_xb)
-            s_xb = self.gen_test.enc_class_model(hot_xb)
-            s_xa = self.gen_test.enc_class_model(hot_xa)
-
-            # decode
-            hot_c_xa = torch.cat([c_xa, self.one_hot_c[ind_b[0]]], 1)
-            hot_c_xb = torch.cat([c_xb, self.one_hot_c[ind_a[0]]], 1)
-
-            # a->b
-            xt_ab = self.gen_test.decode(hot_c_xa, s_xb)  # translation
-
-            # b->a
-            xt_ba = self.gen_test.decode(hot_c_xb, s_xa)  # translation
-
-            # encode again
-            hot_xab_t = torch.cat([xt_ab, self.one_hot_img[ind_b[0]]], 1)
-            c_xab_t = self.gen_test.enc_content(hot_xab_t)
-
-            hot_xba_t = torch.cat([xt_ba, self.one_hot_img[ind_a[0]]], 1)
-            c_xba_t = self.gen_test.enc_content(hot_xba_t)
-
-            # supervision
-            p_a = self.sup(c_xa.cuda(self.cuda1))
-            p_b = self.sup(c_xb.cuda(self.cuda1))
-            p_a_recon = self.sup(c_xab_t.cuda(self.cuda1))
-            p_b_recon = self.sup(c_xba_t.cuda(self.cuda1))
-
-            # supervised loss
-            self.loss_sup_a = self.sup_criterion(p_a, la)
-            self.loss_sup_b = self.sup_criterion(p_b, lb)
-            self.loss_sup_a_recon = self.sup_criterion(p_a_recon, la)
-            self.loss_sup_b_recon = self.sup_criterion(p_b_recon, lb)
-
-            # total loss
-            self.loss_sup_total = hyperparameters['sup_w'] * self.loss_sup_a + \
-                hyperparameters['sup_w'] * self.loss_sup_b + \
-                hyperparameters['sup_w'] * self.loss_sup_a_recon + \
-                hyperparameters['sup_w'] * self.loss_sup_b_recon
-
-            self.loss_sup_total.backward()
-            self.gen_opt.step()
-
-            return hyperparameters['sup_w'] * self.loss_sup_a, \
-                hyperparameters['sup_w'] * self.loss_sup_b, \
-                hyperparameters['sup_w'] * self.loss_sup_a_recon, \
-                hyperparameters['sup_w'] * self.loss_sup_b_recon, \
-                self.loss_sup_total
-
     def gen_update(self, xa, xb, ind_a, ind_b, hyperparameters, multigpus=False):
 
         self.gen_opt.zero_grad()
